@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense &amp; Budget Visualizer</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="header-icon">💰</span>
+        <h1>Expense &amp; Budget Visualizer</h1>
+      </div>
+      <button id="themeToggle" class="btn-icon" title="Toggle dark/light mode" aria-label="Toggle dark/light mode">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- ===== BALANCE CARD ===== -->
+    <section class="balance-card" aria-label="Total Balance">
+      <p class="balance-label">Total Balance</p>
+      <h2 class="balance-amount" id="totalBalance">Rp 0</h2>
+      <div class="balance-stats">
+        <div class="stat income">
+          <span class="stat-label">+ Income</span>
+          <span class="stat-value" id="totalIncome">Rp 0</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat expense">
+          <span class="stat-label">− Expense</span>
+          <span class="stat-value" id="totalExpense">Rp 0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TABS: Add / Summary ===== -->
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" id="tabAdd" role="tab" aria-selected="true" aria-controls="panelAdd">
+        ➕ Add Transaction
+      </button>
+      <button class="tab-btn" id="tabSummary" role="tab" aria-selected="false" aria-controls="panelSummary">
+        📅 Monthly Summary
+      </button>
+    </div>
+
+    <!-- ===== PANEL: ADD TRANSACTION ===== -->
+    <section id="panelAdd" class="tab-panel" role="tabpanel" aria-labelledby="tabAdd">
+
+      <!-- Input Form -->
+      <div class="card">
+        <h2 class="card-title">New Transaction</h2>
+        <form id="transactionForm" novalidate>
+
+          <div class="form-row">
+            <!-- Type toggle -->
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <div class="type-toggle">
+                <button type="button" class="type-btn active" data-type="expense">Expense</button>
+                <button type="button" class="type-btn" data-type="income">Income</button>
+              </div>
+              <input type="hidden" id="transactionType" value="expense" />
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <!-- Item Name -->
+            <div class="form-group">
+              <label class="form-label" for="itemName">Item Name <span class="required">*</span></label>
+              <input
+                type="text"
+                id="itemName"
+                class="form-input"
+                placeholder="e.g. Lunch, Bus fare…"
+                maxlength="60"
+                autocomplete="off"
+              />
+              <span class="field-error" id="itemNameError"></span>
+            </div>
+
+            <!-- Amount -->
+            <div class="form-group">
+              <label class="form-label" for="amount">Amount (Rp) <span class="required">*</span></label>
+              <input
+                type="number"
+                id="amount"
+                class="form-input"
+                placeholder="e.g. 25000"
+                min="1"
+                step="any"
+              />
+              <span class="field-error" id="amountError"></span>
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <!-- Category -->
+            <div class="form-group">
+              <label class="form-label" for="category">Category <span class="required">*</span></label>
+              <select id="category" class="form-input form-select">
+                <option value="">— Select category —</option>
+                <option value="Food">🍔 Food</option>
+                <option value="Transport">🚌 Transport</option>
+                <option value="Fun">🎮 Fun</option>
+              </select>
+              <span class="field-error" id="categoryError"></span>
+            </div>
+
+            <!-- Date -->
+            <div class="form-group">
+              <label class="form-label" for="transDate">Date</label>
+              <input type="date" id="transDate" class="form-input" />
+            </div>
+          </div>
+
+          <!-- Expense Limit -->
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label class="form-label" for="expenseLimit">Expense Limit (Rp)</label>
+              <input
+                type="number"
+                id="expenseLimit"
+                class="form-input"
+                placeholder="e.g. 500000 (0 = off)"
+                min="0"
+                step="any"
+              />
+            </div>
+
+            <!-- Add Custom Category -->
+            <div class="form-group">
+              <label class="form-label" for="customCategory">Add Custom Category</label>
+              <div class="input-with-btn">
+                <input
+                  type="text"
+                  id="customCategory"
+                  class="form-input"
+                  placeholder="e.g. Healthcare"
+                  maxlength="30"
+                />
+                <button type="button" id="addCategoryBtn" class="btn-secondary">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary btn-full">Add Transaction</button>
+        </form>
+      </div>
+
+      <!-- Controls: Sort + Filter -->
+      <div class="list-controls">
+        <div class="control-group">
+          <label class="form-label" for="sortSelect">Sort by</label>
+          <select id="sortSelect" class="form-input form-select compact">
+            <option value="date-desc">Date (Newest)</option>
+            <option value="date-asc">Date (Oldest)</option>
+            <option value="amount-desc">Amount (High→Low)</option>
+            <option value="amount-asc">Amount (Low→High)</option>
+            <option value="category-asc">Category (A→Z)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label class="form-label" for="filterCategory">Filter</label>
+          <select id="filterCategory" class="form-input form-select compact">
+            <option value="all">All Categories</option>
+            <option value="Food">🍔 Food</option>
+            <option value="Transport">🚌 Transport</option>
+            <option value="Fun">🎮 Fun</option>
+          </select>
+        </div>
+        <button id="clearAllBtn" class="btn-danger compact" title="Delete all transactions">🗑 Clear All</button>
+      </div>
+
+      <!-- Transaction List -->
+      <div class="card transaction-card">
+        <h2 class="card-title">Transactions <span class="badge" id="txCount">0</span></h2>
+        <div id="limitWarning" class="limit-warning hidden" role="alert">
+          ⚠️ <span id="limitWarningText"></span>
+        </div>
+        <ul id="transactionList" class="transaction-list" aria-label="Transaction list" aria-live="polite">
+          <li class="empty-state" id="emptyState">
+            <span>No transactions yet.<br />Add one above to get started!</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Pie Chart -->
+      <div class="card chart-card">
+        <h2 class="card-title">Expense Breakdown</h2>
+        <div class="chart-wrapper">
+          <canvas id="expenseChart" role="img" aria-label="Pie chart of expenses by category"></canvas>
+        </div>
+        <p class="chart-empty" id="chartEmpty">Add expenses to see the chart.</p>
+      </div>
+
+    </section>
+    <!-- /panelAdd -->
+
+    <!-- ===== PANEL: MONTHLY SUMMARY ===== -->
+    <section id="panelSummary" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabSummary">
+      <div class="card">
+        <h2 class="card-title">Monthly Summary</h2>
+        <div class="month-nav">
+          <button id="prevMonth" class="btn-icon" aria-label="Previous month">◀</button>
+          <span id="currentMonthLabel" class="month-label"></span>
+          <button id="nextMonth" class="btn-icon" aria-label="Next month">▶</button>
+        </div>
+        <div class="summary-stats" id="summaryStats">
+          <!-- filled by JS -->
+        </div>
+        <div class="chart-wrapper summary-chart-wrapper">
+          <canvas id="summaryChart" role="img" aria-label="Monthly summary bar chart"></canvas>
+        </div>
+        <p class="chart-empty" id="summaryChartEmpty">No data for this month.</p>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Transactions this month</h2>
+        <ul id="summaryList" class="transaction-list" aria-label="Monthly transaction list">
+          <li class="empty-state">No transactions this month.</li>
+        </ul>
+      </div>
+    </section>
+    <!-- /panelSummary -->
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Expense &amp; Budget Visualizer &copy; 2026</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
