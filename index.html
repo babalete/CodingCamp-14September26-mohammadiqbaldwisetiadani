@@ -42,13 +42,16 @@
       </div>
     </section>
 
-    <!-- ===== TABS: Add / Summary ===== -->
+    <!-- ===== TABS: Add / Summary / Categories ===== -->
     <div class="tab-bar" role="tablist">
       <button class="tab-btn active" id="tabAdd" role="tab" aria-selected="true" aria-controls="panelAdd">
         ➕ Add Transaction
       </button>
       <button class="tab-btn" id="tabSummary" role="tab" aria-selected="false" aria-controls="panelSummary">
         📅 Monthly Summary
+      </button>
+      <button class="tab-btn" id="tabCategories" role="tab" aria-selected="false" aria-controls="panelCategories">
+        🗂 Categories
       </button>
     </div>
 
@@ -231,10 +234,45 @@
     </section>
     <!-- /panelSummary -->
 
+    <!-- ===== PANEL: CATEGORIES ===== -->
+    <section id="panelCategories" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabCategories">
+      <div class="card">
+        <h2 class="card-title">🗂 Manage Categories</h2>
+        <p class="cat-panel-intro">
+          The three default categories — <strong>Food</strong>, <strong>Transport</strong>, and <strong>Fun</strong> — cannot be deleted.
+          Any custom category you have added can be removed here.
+          Transactions that used a deleted category will keep their original label.
+        </p>
+        <div id="categoryPanelList" class="category-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Add new category directly from this panel -->
+      <div class="card">
+        <h2 class="card-title">➕ Add New Category</h2>
+        <div class="form-group">
+          <label class="form-label" for="panelCustomCategory">Category Name</label>
+          <div class="input-with-btn">
+            <input
+              type="text"
+              id="panelCustomCategory"
+              class="form-input"
+              placeholder="e.g. Healthcare"
+              maxlength="30"
+              autocomplete="off"
+            />
+            <button type="button" id="panelAddCategoryBtn" class="btn-primary">Add</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /panelCategories -->
+
   </main>
 
   <footer class="app-footer">
-    <p>Expense &amp; Budget Visualizer &copy; 2026</p>
+    <p><i>Created by BABALZ & Powered by <a href="http://kiro.dev">KIRO</a> &copy; 2026</i></p>
   </footer>
 
   <script src="js/app.js"></script>

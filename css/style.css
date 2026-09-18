@@ -77,6 +77,30 @@
 
 html { scroll-behavior: smooth; }
 
+/* ── Links ────────────────────────────────────────────────── */
+a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transition), text-decoration-color var(--transition);
+}
+
+a:visited {
+  color: #7c3aed;               /* purple — distinct from unvisited */
+  text-decoration: underline;
+}
+
+a:hover {
+  color: var(--color-primary-h);
+  text-decoration: underline;
+  text-decoration-style: wavy; /* wavy underline on hover */
+}
+
+a:active {
+  color: var(--color-expense);  /* red flash on click */
+  text-decoration: none;
+}
+
 body {
   font-family: var(--font-sans);
   font-size: 15px;
@@ -634,4 +658,86 @@ input, select, button { font-size: inherit; }
 
 @media (min-width: 600px) {
   .app-main { padding: var(--gap-lg) var(--gap-lg); }
+}
+
+/* ── 19. Categories Panel ─────────────────────────────────── */
+.cat-panel-intro {
+  font-size: .875rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--gap);
+  line-height: 1.6;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .7rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  transition: box-shadow var(--transition);
+}
+
+.cat-item:hover { box-shadow: var(--shadow-sm); }
+
+.cat-item.is-default {
+  border-color: var(--color-primary);
+}
+
+.cat-item-emoji { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+
+.cat-item-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: .95rem;
+}
+
+.cat-item-badge {
+  font-size: .65rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+
+.cat-item-delete {
+  background: transparent;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: .82rem;
+  font-weight: 600;
+  padding: .3rem .65rem;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  flex-shrink: 0;
+}
+
+.cat-item-delete:hover {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.cat-item-delete:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.cat-panel-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: .9rem;
+  padding: 1.5rem 0;
 }

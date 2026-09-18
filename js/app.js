@@ -134,6 +134,13 @@ const dom = {
   summaryList:         $('summaryList'),
   summaryChartEmpty:   $('summaryChartEmpty'),
   summaryChart:        $('summaryChart'),
+
+  // Categories panel
+  tabCategories:        $('tabCategories'),
+  panelCategories:      $('panelCategories'),
+  categoryPanelList:    $('categoryPanelList'),
+  panelCustomCategory:  $('panelCustomCategory'),
+  panelAddCategoryBtn:  $('panelAddCategoryBtn'),
 };
 
 /* ── 4. Utilities ─────────────────────────────────────────── */
@@ -228,6 +235,57 @@ function addCustomCategory() {
   dom.category.value = name;
 }
 
+/* ── 7. Categories Panel ──────────────────────────────────── */
+
+function renderCategoryPanel() {
+  const container = dom.categoryPanelList;
+  container.innerHTML = '';
+
+  if (state.categories.length === 0) {
+    container.innerHTML = '<p class="cat-panel-empty">No categories found.</p>';
+    return;
+  }
+
+  state.categories.forEach(cat => {
+    const isDefault = DEFAULT_CATEGORIES.includes(cat);
+    const item = document.createElement('div');
+    item.className = `cat-item${isDefault ? ' is-default' : ''}`;
+    item.innerHTML = `
+      <span class="cat-item-emoji">${getCategoryEmoji(cat)}</span>
+      <span class="cat-item-name">${escapeHtml(cat)}</span>
+      ${isDefault ? '<span class="cat-item-badge">DEFAULT</span>' : ''}
+      <button
+        class="cat-item-delete"
+        data-cat="${escapeHtml(cat)}"
+        aria-label="Delete category ${escapeHtml(cat)}"
+        ${isDefault ? 'disabled' : ''}
+      >🗑 Delete</button>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function deleteCategoryFromPanel(catName) {
+  if (DEFAULT_CATEGORIES.includes(catName)) return;
+  if (!confirm(`Delete the category "${catName}"?\nTransactions using it will keep their category label.`)) return;
+  state.categories = state.categories.filter(c => c !== catName);
+  saveCategories();
+  rebuildCategorySelects();
+  renderCategoryPanel();
+}
+
+function addCategoryFromPanel() {
+  const raw = dom.panelCustomCategory.value.trim();
+  if (!raw) { alert('Please enter a category name.'); return; }
+  const name = raw.charAt(0).toUpperCase() + raw.slice(1);
+  if (state.categories.includes(name)) { alert(`"${name}" already exists.`); return; }
+  state.categories.push(name);
+  saveCategories();
+  rebuildCategorySelects();
+  dom.panelCustomCategory.value = '';
+  renderCategoryPanel();
+}
+
 /* ── 7. Form Validation ───────────────────────────────────── */
 
 function clearErrors() {
@@ -288,10 +346,20 @@ function handleFormSubmit(e) {
   state.transactions.unshift(tx);
   saveTransactions();
 
-  // Reset form fields (keep category & limit for convenience)
-  dom.itemName.value  = '';
-  dom.amount.value    = '';
-  dom.transDate.value = '';
+  // Reset all form fields after submission
+  dom.itemName.value      = '';
+  dom.amount.value        = '';
+  dom.category.value      = '';
+  dom.transDate.value     = '';
+  dom.expenseLimit.value  = '';
+  dom.customCategory.value = '';
+
+  // Reset type toggle back to Expense
+  dom.typeHidden.value = 'expense';
+  document.querySelectorAll('.type-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === 'expense');
+  });
+
   clearErrors();
 
   renderAll();
@@ -613,7 +681,25 @@ function renderAll() {
   }
 }
 
-/* ── 15. Event Listeners ──────────────────────────────────── */
+/* ── 15. Tab Helper ───────────────────────────────────────── */
+
+function activateTab(name) {
+  // Buttons
+  dom.tabAdd.classList.toggle('active', name === 'add');
+  dom.tabSummary.classList.toggle('active', name === 'summary');
+  dom.tabCategories.classList.toggle('active', name === 'categories');
+
+  dom.tabAdd.setAttribute('aria-selected', name === 'add' ? 'true' : 'false');
+  dom.tabSummary.setAttribute('aria-selected', name === 'summary' ? 'true' : 'false');
+  dom.tabCategories.setAttribute('aria-selected', name === 'categories' ? 'true' : 'false');
+
+  // Panels
+  dom.panelAdd.classList.toggle('hidden', name !== 'add');
+  dom.panelSummary.classList.toggle('hidden', name !== 'summary');
+  dom.panelCategories.classList.toggle('hidden', name !== 'categories');
+}
+
+/* ── 16. Event Listeners ──────────────────────────────────── */
 
 function initEventListeners() {
 
@@ -622,22 +708,17 @@ function initEventListeners() {
 
   // Tabs
   dom.tabAdd.addEventListener('click', () => {
-    dom.tabAdd.classList.add('active');
-    dom.tabSummary.classList.remove('active');
-    dom.tabAdd.setAttribute('aria-selected', 'true');
-    dom.tabSummary.setAttribute('aria-selected', 'false');
-    dom.panelAdd.classList.remove('hidden');
-    dom.panelSummary.classList.add('hidden');
+    activateTab('add');
   });
 
   dom.tabSummary.addEventListener('click', () => {
-    dom.tabSummary.classList.add('active');
-    dom.tabAdd.classList.remove('active');
-    dom.tabSummary.setAttribute('aria-selected', 'true');
-    dom.tabAdd.setAttribute('aria-selected', 'false');
-    dom.panelSummary.classList.remove('hidden');
-    dom.panelAdd.classList.add('hidden');
+    activateTab('summary');
     renderMonthlySummary();
+  });
+
+  dom.tabCategories.addEventListener('click', () => {
+    activateTab('categories');
+    renderCategoryPanel();
   });
 
   // Type toggle buttons
@@ -652,10 +733,23 @@ function initEventListeners() {
   // Form submit
   dom.form.addEventListener('submit', handleFormSubmit);
 
-  // Add custom category
+  // Add custom category (form panel)
   dom.addCategoryBtn.addEventListener('click', addCustomCategory);
   dom.customCategory.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); addCustomCategory(); }
+  });
+
+  // Categories panel — delete (event delegation)
+  dom.categoryPanelList.addEventListener('click', e => {
+    const btn = e.target.closest('.cat-item-delete');
+    if (!btn || btn.disabled) return;
+    deleteCategoryFromPanel(btn.dataset.cat);
+  });
+
+  // Categories panel — add new category
+  dom.panelAddCategoryBtn.addEventListener('click', addCategoryFromPanel);
+  dom.panelCustomCategory.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addCategoryFromPanel(); }
   });
 
   // Sort
